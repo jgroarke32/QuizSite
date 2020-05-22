@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="scripts/wsClient.js"></script>
+    <link rel="stylesheet" href="css/ClientSite.css" />
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.debug.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="scripts/c.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.9.1/underscore-min.js"></script>
+    <script src="scripts/utilites.js"></script>
+    <script src="scripts/ViewModels/Participant/quizVM.js"></script>
+    <script src="scripts/ViewModels/Participant/UsersQuestions.js"></script>
+    <script src="scripts/ViewModels/allUsers.js"></script>
+    <script src="scripts/ViewModels/Participant/roundScores.js"></script>
+    <script src="scripts/ViewModels/Participant/pageModel.js"></script>
+
+</head>
+<body class="bId" id="bId" style="font-family: 'Walter Turncoat', cursive">
+    <script async defer src="https://connect.facebook.net/en_US/sdk.js"></script>
+    <div class="bodyopac" id="bodyId">
+
+        <div class="nav-side-menu">
+            <div class="brand"><img src="css/images/quiztime.gif" style="max-width:100%" /></div>
+            <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+            <div class="menu-list">
+                <ul id="menu-content" class="menu-content collapse out">
+                    <li>
+                        <a href="#">
+                            <i class="fa fa-dashboard fa-lg"></i> Round <span data-bind="text: quizInfo.currentRound"></span> of <span data-bind="text:quizInfo.totalRounds"></span>
+                        </a>
+                    </li>
+                    <li data-toggle="collapse" data-target="#service" class="collapsed">
+                        <a href="#"><i class="fa fa-globe fa-lg"></i> Services <span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="service">
+                        <li>New Service 1</li>
+                        <li>New Service 2</li>
+                    </ul>
+                    <li data-toggle="collapse" data-target="#onlineUsers" class="collapsed">
+                        <a href="#"> <i class="fa fa-users fa-lg"></i> Users<span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="onlineUsers">
+                        <li data-bind="foreach: users.data" style="display: inline-flex">
+                            <div class="dot" data-bind="style: { 'background-color':  $data.online() ? 'Lime' : 'Red' }"> </div>
+                            <div data-bind="text: name"></div>
+                        </li>
+                    </ul>
+                    <li>
+                        <button type="button" class="btn btn-secondary testbutton" data-bind="visible: $root.viewRound() == $root.quizInfo.currentRound() && questions.allAnswered($root.viewRound()) && !$root.questions.currentRoundSent()" data-toggle="modal" data-target="#roundReviewModal" style="width:100%">Review and Send</button>
+                    </li>
+                    <li data-toggle="collapse" data-target="#smallLeaderboard" class="collapsed">
+                        <a href="#"> <i class="fa fa-users fa-lg"></i> Leaderboard<span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="smallLeaderboard">
+                        <li>
+                            <div id="masterLeaderboard">
+                                <div id="leaderboard">
+                                    <ul id="players" style="margin-bottom: 0px">
+                                        <li class="header" style="display:inline-flex">
+                                            <div class="rank" style="margin-right:-5%">#</div>
+                                            <div class="name" style="margin-right:-15%">User</div>
+
+                                            <div class="score">Score</div>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <div id="leaderboard">
+                                <ul id="players" data-bind="foreach: {data: $root.leaderboard }">
+                                    <li class='player' style="display:inline-flex; color:black">
+                                        <div class='rank' data-bind="text: $index()+1" style="margin-right:-5%"></div>
+                                        <div class='name' data-bind="text: user" style="margin-right:-15%"></div>
+
+                                        <div data-bind="text: score" class='scoreRnd'></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+
+        <div class="content">
+            <div class="d-flex flex-row-reverse bd-highlight">
+                <h1 data-bind="style: { opacity:  quizInfo.liveQuiz() ? '1' : '0' }, visible: $root.viewRound() !== $root.quizInfo.totalRounds()"><span class="badge badge-secondary">Round: </span><span class="badge badge-secondary" data-bind="text: quizInfo.currentRound"></span></h1>
+                <h1 data-bind="style: { opacity:  quizInfo.liveQuiz() ? '1' : '0' }, visible: $root.viewRound() == $root.quizInfo.totalRounds()"><span class="badge badge-secondary">Final Round </span></h1>
+            </div>
+            <div class="d-flex bd-highlight">
+                <div class="p-2 bd-highlight">
+                </div>
+                <div class="p-2 flex-fill bd-highlight">
+                    <form>
+                        <span data-bind="visible: $root.questions.currentRoundSent">Waiting for admin to correct round</span>
+                        <table class="table">
+                            <thead>
+                                <tr class="d-flex">
+                                    <th scope="col" class="col-lg-1">Round  <select data-bind="options: quizInfo.roundsPlayedList, value: viewRound"></select></th>
+                                    <th scope="col" class="col-lg-6">Question</th>
+                                    <th scope="col" class="col-lg-4">Answer</th>
+                                </tr>
+                            </thead>
+                            <tbody data-bind="foreach: { data: questions.filteredQuestions($root.viewRound()), afterAdd: questions.showQuestion}">
+                                <tr class="d-flex">
+                                    <td class="col-lg-1"><span data-bind="text: $index()+1"> </span></td>
+                                    <td class="col-lg-6"><span data-bind="text: question" /></td>
+                                    <td class="col-lg-4">
+                                        <input data-bind="value: answer, visible: !$root.questions.currentRoundSent() && round == $root.quizInfo.currentRound()" />
+                                        <span data-bind="text: answer, visible: $root.questions.currentRoundSent() || round !== $root.quizInfo.currentRound()"></span>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+                <div class="p-2 w-20 bd-highlight" data-bind="style: { opacity:  quizInfo.liveQuiz() ? '1' : '0' }">
+                    <div id="leaderboard">
+                        <ul id="players" style="margin-bottom: 0px">
+                            <li class="header">
+                                <div class="rank">Rank</div>
+                                <div class="name">User</div>
+                                <!-- ko foreach: $root.quizInfo.roundsPlayedList -->
+                                <!-- ko if: $data !== $root.quizInfo.currentRound() -->
+                                <div class="score">Round <span data-bind="text: $data"></span></div>
+                                <!-- /ko -->
+                                <!-- /ko -->
+                                <div class="score" style="padding-left:15px">Score</div>
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="leaderboard">
+                        <ul id="players" data-bind="foreach: {data: $root.leaderboard}">
+                            <li class='player'>
+                                <div class='rank' data-bind="text: $index()+1"></div>
+                                <div class='name' data-bind="text: user"></div>
+                                <!-- ko foreach: $root.roundScores -->
+                                <!-- ko if: $data.user == $parent.user -->
+                                <div class="scoreRnd" data-bind="text: $data.score"></div>
+                                <!-- /ko -->
+                                <!-- /ko -->
+                                <div data-bind="text: score" class='scoreRnd'></div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="roundReviewModal" tabindex="-1" role="dialog" aria-labelledby="roundReviewModalLabel" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="roundReviewModalLabel">Review Questions</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <td><span><b>Question</b></span></td>
+                                        <td><span><b>Answer</b></span></td>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: questions.filteredQuestions($root.viewRound())">
+                                    <tr>
+                                        <td data-bind="text: question"></td>
+                                        <td data-bind="text: answer"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                            <button type="button" class="btn btn-primary" data-bind='click: $root.questions.sendAnswers'>Save changes</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- Init Page Modal -->
+            <div class="modal fade" id="startupModal" tabindex="-1" role="dialog" aria-labelledby="startupModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title" id="startupModalLabel">Welcome to the quiz</h5> </div>
+                        <div class="modal-body">
+                            <table id="welcomeMessage">                               
+                                    <tr>
+                                        <td><div class="fb-login-button" data-size="large" data-button-type="continue_with" data-layout="default" data-auto-logout-link="false" data-use-continue-as="false" data-width=""></div></td>
+                                    </tr>
+                                    <tr>
+                                        Add config somewhere to make sure quizID exists
+                                    </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WaitingRoom Page Modal -->
+            <div class="modal fade" id="WaitingRoomModal" tabindex="-1" role="dialog" aria-labelledby="WaitingRoomModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header"><h5 class="modal-title" id="startupModalLabel">Waiting for admin to start quiz</h5> </div>
+                        <div class="modal-body">
+                            <div>Users</div>
+                            <br />
+                            <div data-bind="foreach: users.data">
+                                <img data-bind="attr: { src: pid }" />
+                                <div data-bind="text: name"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    <div id="roundAnimation" style="display:none">
+
+        <div class="neon-wrapper">
+            <span class="txt">Round 1 Results</span>
+            <span class="gradient"></span>
+            <span class="dodge"></span>
+        </div>
+        <div class="Index-gallery-item-content-body" data-bind="foreach: roundScores.filteredScores($root.quizInfo.currentRound())">
+            <x-sign>
+                <img data-bind="attr: { src: self.users().filter(obj => { return obj.name = $data.user}[0]}.pid()}" /><strong data-bind="text: user"></strong><string style="padding-left:23px" data-bind="text:score"></string>
+            </x-sign>
+        </div>
+        <div id="testbutton" onclick="newRound()"></div>
+
+
+    </div>
+</body>
+</html>
+<script>
+    $(document).ready(function () {
+        ko.applyBindings(viewModel);
+    });
+
+
+    function statusChangeCallback(response) {
+        console.log('statusChangeCallback');
+        console.log(response);
+        // The response object is returned with a status field that lets the
+        // app know the current login status of the person.
+        // Full docs on the response object can be found in the documentation
+        // for FB.getLoginStatus().
+        if (response.status === 'connected') {
+            // Logged into your app and Facebook.
+            console.log('Welcome!  Fetching your information.... ');
+            $("#startupModal").modal('hide');
+            $("#WaitingRoomModal").modal('show');
+            FB.api('/me', function (response) {
+                console.log('Successful login for: ' + response.name);
+                viewModel.quizInfo.userName(response.name);
+                viewModel.quizInfo.userId(response.id);
+                var urlparams = getParams(window.location.href);
+                viewModel.quizInfo.quizId(urlparams.quizId);
+                viewModel.startWS();
+            });
+        }
+        else {
+            // The person is not logged into your app or we are unable to tell.
+            console.log('Please log ' + 'into this app.');
+            FB.login(function (response) {
+                // handle the response
+                if (response.status === 'connected') {
+                    // Logged into your app and Facebook.
+                    console.log('Welcome!  Fetching your information.... ');
+                    $("#startupModal").modal('hide');
+                    $("#WaitingRoomModal").modal('show');
+                    FB.api('/me', function (response) {
+                        console.log('Successful login for: ' + response.name);
+                        viewModel.quizInfo.userName(response.name);
+                        viewModel.quizInfo.userId(response.id);
+                        var urlparams = getParams(window.location.href);
+                        viewModel.quizInfo.quizId(urlparams.quizId);
+                        viewModel.startWS();
+                    });
+                }
+            });
+        }
+    }
+
+
+</script>

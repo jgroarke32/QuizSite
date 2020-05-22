@@ -1,0 +1,379 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="scripts/wsClient.js"></script>
+    <link rel="stylesheet" href="css/AdminLive.css" />
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.css" />
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/knockout/3.5.1/knockout-latest.debug.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="scripts/c.js"></script>
+    <script src="scripts/utilites.js"></script>
+    <script src="scripts/ViewModels/adminLiveQuiz/quizVM.js"></script>
+    <script src="scripts/ViewModels/adminLiveQuiz/questions.js"></script>
+    <script src="scripts/ViewModels/allUsers.js"></script>
+    <script src="scripts/ViewModels/adminLiveQuiz/answers.js"></script>
+    <script src="scripts/ViewModels/adminLiveQuiz/roundScoresVM.js"></script>
+    <script src="scripts/ViewModels/adminLiveQuiz/pageModel.js"></script>
+</head>
+<body class="bId" id="bId">
+    <script async defer src="https://connect.facebook.net/en_US/sdk.js"></script>
+    <div class="bodyopac" id="bodyId">
+
+        <div class="nav-side-menu">
+            <div class="brand"><img src="css/images/quiztime.gif" style="max-width:100%" /></div>
+            <i class="fa fa-bars fa-2x toggle-btn" data-toggle="collapse" data-target="#menu-content"></i>
+            <div class="menu-list">
+                <ul id="menu-content" class="menu-content collapse out">
+                    <li>
+                        <a href="#">
+                            <i class="fa fa-dashboard fa-lg"></i> Round <span data-bind="text: quizInfo.currentRound"></span> of <span data-bind="text:quizInfo.totalRounds"></span>
+                        </a>
+                    </li>
+                    <li data-toggle="collapse" data-target="#quizInfo" class="collapsed">
+                        <a href="#"><i class="fa fa-globe fa-lg"></i> Quiz Information <span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="quizInfo">
+                        <li>
+                            <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#waitingRoomModal" style="width:100%">Waiting Room</button>
+                        </li>
+                        <li>
+                            <button type="button" class="btn btn-secondary" id="Savebtn" data-bind="click: quizInfo.startQuiz" style="width:100%">Start Quiz</button>
+                        </li>
+                        <li>
+                    </ul>
+                    <li data-toggle="collapse" data-target="#onlineUsers" class="collapsed">
+                        <a href="#"> <i class="fa fa-users fa-lg"></i> Users<span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="onlineUsers">
+                        <li data-bind="foreach: users.data" style="display: inline-flex">
+                            <div class="dot" data-bind="style: { 'background-color':  $data.online() ? 'Lime' : 'Red' }"> </div>
+                            <div data-bind="text: name"></div>
+                        </li>
+                    </ul>
+                    <li data-toggle="collapse" data-target="#correction" class="collapsed">
+                        <a href="#"><i class="fa fa-globe fa-lg"></i> Correction <span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="correction" data-bind="css: { show: $root.quizInfo.liveQuiz() && $root.questions.filteredQuestions($root.quizInfo.currentRound()).map(q => q.isSent()).every(x => x == true)}">
+                        <li>
+                            <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#correctionModal" data-bind="visible: showMarkModal" style="width:100%">Review Round</button>
+                        </li>
+                        <li class="progress" style="width:100%">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" aria-valuemin="0" aria-valuemax="100" data-bind="style: { width : answersReturnedPct }, text: answersReturnedPct"></div>
+                        </li>
+                        <li>
+                            <span style="width:100%" data-bind="text: answersReturnedPctTxt"></span>
+                        </li>
+                        <!-- ko foreach: answersReturnedList -->
+                        <li>
+                            <span data-bind="css: $data.isSent ? 'fas fa-check-circle' : 'fas fa-times-circle'"></span><span data-bind="text: user"></span>
+                        </li>
+                        <!-- /ko -->
+                    </ul>
+                    <li data-toggle="collapse" data-target="#smallLeaderboard" class="collapsed">
+                        <a href="#"> <i class="fa fa-users fa-lg"></i> Leaderboard<span class="arrow"></span></a>
+                    </li>
+                    <ul class="sub-menu collapse" id="smallLeaderboard">
+                        <li>
+                            <div id="leaderboard">
+                                <ul id="players" style="margin-bottom: 0px">
+                                    <li class="header" style="display:inline-flex">
+                                        <div class="rank" style="margin-right:-5%">#</div>
+                                        <div class="name" style="margin-right:-15%">User</div>
+                                        <div class="score">Score</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                        <li>
+                            <div id="leaderboard">
+                                <ul id="players" data-bind="foreach: {data: $root.leaderboard }">
+                                    <li class='player' style="display:inline-flex; color:black">
+                                        <div class='rank' data-bind="text: $index()+1" style="margin-right:-5%"></div>
+                                        <div class='name' data-bind="text: user" style="margin-right:-15%"></div>
+
+                                        <div data-bind="text: score" class='scoreRnd'></div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <div data-bind="visible: quizInfo.liveQuiz()" class="d-flex flex-row-reverse bd-highlight">
+                <h1><span class="bedge badge-secondary" data-bind="visible: $root.quizInfo.currentRound() == $root.quizInfo.totalRounds()">Final Round</span></h1>
+                <h1><span class="badge badge-secondary" data-bind="visible: $root.quizInfo.currentRound() !== $root.quizInfo.totalRounds()">Round: </span><span class="badge badge-secondary" data-bind="text: quizInfo.currentRound"></span></h1>
+            </div>
+            <div class="modal-body">
+                <table class="table">
+                    <thead>
+                        <tr class="d-flex">
+                            <th scope="col" class="col-lg-1">Round  <select data-bind="options: quizInfo.determineRoundCount, value: viewRound"></select></th>
+                            <th scope="col" class="col-lg-5">Question</th>
+                            <th scope="col" class="col-lg-3">Answer</th>
+                            <th data-bind="visible: quizInfo.liveQuiz" scope="col" class="col-lg-1">Send</th>
+                        </tr>
+                    </thead>
+                    <tbody data-bind="foreach: questions.filteredQuestions($root.viewRound())">
+                        <tr class="d-flex">
+                            <td class="col-lg-1"><span data-bind="text: $index()+1"> </span></td>
+                            <td class="col-lg-5"><span data-bind="text: question" /></td>
+                            <td class="col-lg-3"><span data-bind="text: answer"></span></td>
+                            <td class="col-lg-2">
+                                <button type="button" class="btn btn-primary" data-bind="visible: (!$data.isSent() && $root.quizInfo.liveQuiz() && $data.round == $root.quizInfo.currentRound()), click: $root.questions.sendQtoClients">Send Question</button>
+                                <button type="button" class="btn btn-outline-secondary" data-bind="visible: ($data.isSent() && $root.quizInfo.liveQuiz() && $data.round == $root.quizInfo.currentRound())">Sent</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Correction Modal -->
+            <div class="modal fade" id="correctionModal" tabindex="-1" role="dialog" aria-labelledby="correctionModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="correctionModalLabel">Correction for Round <span data-bind="text: $root.quizInfo.currentRound()"></span></h5>
+                        </div>
+                        <div class="modal-body">
+                            <div data-bind="foreach:  questions.filteredQuestions($root.quizInfo.currentRound())">
+                                <table class="table" style="margin-bottom: 0px">
+                                    <thead>
+                                        <tr class="d-flex">
+                                            <th class="col-lg-4"><span data-bind="text: question"></span></th>
+                                            <th class="col-lg-4"><span data-bind="text: answer"></span></th>
+                                            <th class="col-lg-2"></th>
+                                            <th class="col-lg-2">Result</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- ko foreach: $root.answers.filteredAnswers(questionId) -->
+                                        <tr class="d-flex">
+                                            <td class="col-lg-4"><span data-bind="text: $data.user"></span></td>
+                                            <td class="col-lg-4"><span data-bind="text: $data.answer"></span></td>
+                                            <td class="btn-group col-lg-2" role="group" style="padding-top: 5px; padding-bottom: 5px">
+                                                <button type="button" class="btn btn-success" data-bind="click: $root.answers.markCorrect" style="width: 50%">
+                                                    <svg class="bi bi-check-circle" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M15.354 2.646a.5.5 0 010 .708l-7 7a.5.5 0 01-.708 0l-3-3a.5.5 0 11.708-.708L8 9.293l6.646-6.647a.5.5 0 01.708 0z" clip-rule="evenodd" />
+                                                        <path fill-rule="evenodd" d="M8 2.5A5.5 5.5 0 1013.5 8a.5.5 0 011 0 6.5 6.5 0 11-3.25-5.63.5.5 0 11-.5.865A5.472 5.472 0 008 2.5z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                                <button type="button" class="btn btn-danger" data-bind="click: $root.answers.markIncorrect" style="width: 50%">
+                                                    <svg class="bi bi-x-circle-fill" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                        <path fill-rule="evenodd" d="M16 8A8 8 0 110 8a8 8 0 0116 0zm-4.146-3.146a.5.5 0 00-.708-.708L8 7.293 4.854 4.146a.5.5 0 10-.708.708L7.293 8l-3.147 3.146a.5.5 0 00.708.708L8 8.707l3.146 3.147a.5.5 0 00.708-.708L8.707 8l3.147-3.146z" clip-rule="evenodd" />
+                                                    </svg>
+                                                </button>
+                                            </td>
+                                            <td class="col-lg-2"><span data-bind="text: isCorrect() === true? 'Correct' : isCorrect() === ''? 'Not Corrected' : 'Wrong'"></span></td>
+                                        </tr>
+                                        <!-- /ko -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <div data-bind="visible: !$root.answers.isallCorrected()"><span>Need to correct all answers to continue</span></div>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bind="enable: $root.answers.isallCorrected">Close correction</button>
+                            <button type="button" class="btn btn-primary" id="Savebtn" data-toggle="modal" data-target="#summaryModal" data-bind="click: $root.openSummary, enable: $root.answers.isallCorrected">Summary</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="summaryModal" tabindex="-1" role="dialog" aria-labelledby="summaryModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog modal-lg" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="summaryModalLabel">Round <span data-bind="text: $root.quizInfo.currentRound"></span> Summary</h5>
+                            <button type="button" class="close" data-dismiss="modal" data-bind="click: $root.closeSummary" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th><span>User</span></th>
+                                        <th><span>Round Score</span></th>
+                                        <th><span>Total Score</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody data-bind="foreach: { data: $root.users.data, as: 'item' }">
+                                    <tr>
+                                        <td><span data-bind="text: item.name"></span></td>
+
+                                        <td data-bind="foreach: $root.roundScores.data()">
+                                            <!-- ko if: $data.round == $root.quizInfo.currentRound() && $data.user == item.name -->
+                                            <span data-bind="text: score"></span>
+                                            <!-- /ko -->
+                                        </td>
+                                        <td data-bind="foreach: $root.leaderboard">
+                                            <!-- ko if: $data.user == item.name -->
+                                            <span data-bind="text: score"></span>
+                                            <!-- /ko -->
+                                        </td>
+                                    </tr>
+
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bind="click: $root.closeSummary">Back to correction</button>
+                            <button type="button" class="btn btn-primary" id="Savebtn" data-bind="click: $root.sendRound, visible: $root.quizInfo.currentRound() !== $root.quizInfo.totalRounds()">Send Result</button>
+                            <button type="button" class="btn btn-primary" id="Savebtn" data-bind="click: $root.finishQuiz, visible: $root.quizInfo.currentRound() == $root.quizInfo.totalRounds()">Finish Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal -->
+            <div class="modal fade" id="waitingRoomModal" tabindex="-1" role="dialog" aria-labelledby="waitingRoomModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="waitingRoomModalLabel">Waiting Room</h5>
+                        </div>
+                        <div class="modal-body">
+                            <div>Users</div>
+                            <br />
+                            <div data-bind="foreach: users.data">
+                                <div data-bind="text: name"></div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary" id="Savebtn" data-bind="click: quizInfo.startQuiz, visible: users.data().length > 0">Start Quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="masterLeaderboard">
+                <div id="leaderboard">
+                    <ul id="players" style="margin-bottom: 0px">
+                        <li class="header">
+                            <div class="rank">Rank</div>
+                            <div class="name">User</div>
+                            <!-- ko foreach: $root.roundScores.roundsPlayed -->
+                            <div class="score">Round <span data-bind="text: $data"></span></div>
+                            <!-- /ko -->
+                            <div class="score" style="padding-left:15px">Score</div>
+                        </li>
+                    </ul>
+                </div>
+                <div id="leaderboard">
+                    <ul id="players" data-bind="foreach: {data: $root.leaderboard }">
+                        <li class='player'>
+                            <div class='rank' data-bind="text: $index()+1"></div>
+                            <div class='name' data-bind="text: user"></div>
+                            <!-- ko foreach: $root.roundScores -->
+                            <!-- ko if: $data.user == $parent.user -->
+                            <div class="scoreRnd" data-bind="text: $data.score"></div>
+                            <!-- /ko -->
+                            <!-- /ko -->
+                            <div data-bind="text: score" class='scoreRnd'></div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <button type="button" onclick="roundEnd()">To black</button>
+        </div>
+    </div>
+    <div id="roundAnimation" style="display:none">
+
+        <div class="neon-wrapper">
+            <span class="txt">Round 1 Results</span>
+            <span class="gradient"></span>
+            <span class="dodge"></span>
+        </div>
+        <div class="Index-gallery-item-content-body">
+            <x-sign>
+                <strong>Jason</strong><string style="padding-left:23px">23</string>
+            </x-sign>
+            <x-sign>
+                <strong>Tom</strong><string style="padding-left:23px">2</string>
+            </x-sign>
+            <x-sign>
+                <strong>Paul</strong><string style="padding-left:23px">1</string>
+            </x-sign>
+        </div>
+        <div id="testbutton" onclick="newRound()"></div>
+
+
+    </div>
+</body>
+</html>
+<script>
+    ko.applyBindings(viewModel);
+
+
+    function statusChangeCallback(response) {
+        console.log('statusChangeCallback');
+        console.log(response);
+        // The response object is returned with a status field that lets the
+        // app know the current login status of the person.
+        // Full docs on the response object can be found in the documentation
+        // for FB.getLoginStatus().
+        if (response.status === 'connected') {
+            // Logged into your app and Facebook.
+            console.log('Welcome!  Fetching your information.... ');
+            FB.api('/me', function (response) {
+                console.log('Successful login for: ' + response.name);
+                viewModel.quizInfo.userName(response.name);
+                viewModel.quizInfo.userId(response.id);
+                var urlparams = getParams(window.location.href);
+                viewModel.quizInfo.quizId = urlparams.quizId;
+                startWS();
+            });
+        }
+        else {
+            // The person is not logged into your app or we are unable to tell.
+            console.log('Please log ' + 'into this app.');
+            FB.login(function (response) {
+                // handle the response
+                if (response.status === 'connected') {
+                    // Logged into your app and Facebook.
+                    console.log('Welcome!  Fetching your information.... ');
+                    FB.api('/me', function (response) {
+                        console.log('Successful login for: ' + response.name);
+                        viewModel.quizInfo.userName(response.name);
+                        viewModel.quizInfo.userId(response.id);
+                        var urlparams = getParams(window.location.href);
+                        viewModel.quizInfo.quizId(urlparams.quizId);
+
+                        startWS();
+                    });
+                }
+            });
+        }
+    }
+
+
+    var startWS = function() {
+        var cookie = parseInt(getCookie('quizId'));
+        if (!cookie) {
+            var wsOnOpen = function (item) {
+                var userinfo = { content: "newAdmin", userId: viewModel.quizInfo.userId(), user: viewModel.quizInfo.userName(), quizId: 1234 }; //viewModel.quizInfo.quizId
+                socket.send(serialize(userinfo));
+            }
+            addwsOpenHandler(wsOnOpen, 1);
+            //Show modal on startup
+        }
+        else {
+            var adminback = function (item) {
+                socket.send(serialize({ content: "retrieveAdminData", quizId: cookie, user: viewModel.quizInfo.userName() }));
+            };
+            addwsOpenHandler(adminback, 1);
+        }
+        connectWebSocket({
+            server: 'localhost',
+            port: '5050'
+        });
+    }
+</script>

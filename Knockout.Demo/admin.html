@@ -1,0 +1,269 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+    <script src="https://code.jquery.com/jquery-3.5.1.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="scripts/knockout-2.2.0.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="scripts/c.js"></script>
+    <script src="scripts/Admin/questionsVM.js"></script>
+    <script src="scripts/Admin/quizVM.js"></script>
+</head>
+<body>
+    <div>Round <span data-bind="text: viewRound"></span></div>
+    <!-- ko ifnot: viewRound() == quizInfo.rounds() -->
+    <div><span data-bind="text: quizInfo.rounds() - viewRound()"></span> remaining</div>
+    <!-- /ko -->
+    <div class="modal-body" data-bind="visible: shouldShowQuestions">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Round<select data-bind="options: roundsList, value: viewRound"></select></th>
+                    <th>Question</th>
+                    <th>Answer</th>
+                    <th>Type</th>
+                </tr>
+            </thead>
+            <tbody data-bind="foreach: questions.filteredQuestions()">
+                <tr>
+                    <td><span data-bind="text: $index()+1"> </span></td>
+                    <td><input data-bind="value: question" /></td>
+                    <td><input data-bind="value: answer" /></td>
+                    <td><select data-bind="options: $root.availableTypes, value: qtype"></select></td>
+                    <td></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Button trigger modal -->
+    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#reviewModal" data-bind="visible: shouldShowQuestions, enable: finishRoundQs">Review Questions</button>
+
+    <!-- ReviewModal -->
+    <div class="modal fade" id="reviewModal" tabindex="-1" role="dialog" aria-labelledby="reviewModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="reviewModalLabel">Review Questions</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <table>
+                        <tr>
+                            <th>Question</th>
+                            <th>Type</th>
+                            <th>Answer</th>
+                        </tr>
+                        <tbody data-bind="foreach: questions.filteredQuestions()">
+                            <tr>
+                                <td><span data-bind="text: $index()+1"> </span></td>
+                                <td data-bind="text: question"></td>
+                                <td data-bind="text: qtype"></td>
+                                <td data-bind="text: answer"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="Savebtn" data-bind='click: questions.sendQuestions'>Save and Next Round</button>
+                    <button type="button" class="btn btn-primary" id="finishQuestionInit" style="display:none" data-bind='click: quizInfo.startQuiz'>Start Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Page Modal -->
+    <div class="modal fade" id="startupModal" tabindex="-1" role="dialog" aria-labelledby="startupModalLabel" aria-hidden="true" data-backdrop="static" data-keyboard="false">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="startupModalLabel">Welcome to the quiz</h5>
+                </div>
+                <div class="modal-body">
+                    <table id="welcomeMessage">
+                        <tr>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-bind="click: startadminquestions">Start new quiz</button>
+                            </td>
+                            <td>
+                                <button type="button" class="btn btn-primary" data-bind="click: quizInfo.fetchQuiz">Get previously saved quiz</button>
+                            </td>
+                        </tr>
+                    </table>
+                    <table id="startmodalrounds" style="display:none">
+                        <tbody>
+                            <tr>
+                                <td>Rounds:</td>
+                                <td> <input type="number" min="0" max="100" data-bind="value: quizInfo.rounds" /></td>
+                            </tr>
+                            <tr>
+                                <td>Questions per Round:</td>
+                                <td><input type="number" min="0" max="200" data-bind="value: quizInfo.questioncount" /></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <!--<table id="startmodalprev" style="display:none">
+                        <tbody>
+                            <tr>
+                                <td>Questions per Round:</td>
+                                <td><input type="number" min="0" max="2000" data-bind="value:quizId" /></td>
+                            </tr>
+                        </tbody>
+                    </table>-->
+                </div>
+                <div class="modal-footer" id="startmodalfooter" style="display:none">
+                    <button type="button" class="btn btn-primary" data-bind='click: initPage'>Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+<script>
+    var pageModel = function () {
+        var self = this;
+
+        self.addChild = function (property, child) {
+            child._parent = this;
+            this[property] = child;
+            return;
+        };
+
+        self.addChild("questions", new questionsVM());
+        self.addChild("quizInfo", new quizVM());
+
+        self.shouldShowQuestions = ko.observable(false);
+        self.viewRound = ko.observable(1);
+        self.availableTypes = ko.observableArray(['text1', 'year1']);
+
+        self.startadminquestions = function () {
+            document.getElementById("welcomeMessage").remove();
+            document.getElementById("startmodalrounds").style.display = "block";
+            document.getElementById("startmodalfooter").style.display = "block";
+        };
+
+        self.roundsList = ko.computed(function () {
+            return Array.from(Array(parseInt(self.quizInfo.rounds())).keys()).map(n => n + 1);           
+        });
+
+        self.currentRoundQuestions = ko.computed(function () {
+            return self.questions.data().filter(obj => { return obj.round == self.viewRound() });
+        });
+
+        self.finishRoundQs = ko.computed(function () {
+            return self.currentRoundQuestions().length == self.questions.data().filter(obj => { return obj.round == self.viewRound() && obj.question() !== "" && obj.answer() !== "" }).length
+        });
+
+        self.determineQuestionCount = ko.computed(function () {
+            if (self.quizInfo.questioncount() > 0) { self.questions.addInitQuestions(self.quizInfo.questioncount()) }
+        }, this);
+
+        self.initPage = function () {
+            if (self.quizInfo.rounds() > 0 && self.quizInfo.questioncount() > 0) { $("#startupModal").modal('hide'); self.shouldShowQuestions(true) };
+            var toSend = { content: "newQuiz", rounds: self.quizInfo.rounds(), questoncount: self.quizInfo.questioncount(), quizId: "123", admin: self.quizInfo.userid() };
+            socket.send(serialize(toSend));
+            //else
+        }
+
+        // Animation callbacks for the planets list
+        self.showQuestion = function (element) {
+            if (element.nodeType === 1) {
+                $(element).hide().fadeIn();
+            }
+        }
+    }
+    var viewModel = new pageModel();
+    ko.applyBindings(viewModel);
+
+</script>
+<script>
+    var options = {
+        server: '127.0.0.1',
+        port: '5050'
+    };
+
+    var socket, loadedFlag;
+    var timeout = 2000;
+    var clearTimer = -1;
+    var data = {};
+
+    function handleErrors(sError, sURL, iLine) {
+        return true;
+    };
+    function getSocketState() {
+        return (socket != null) ? socket.readyState : 0;
+    }
+
+    function onMessage(e) {
+        data = $.parseJSON(e.data);
+
+        var serverData = $.parseJSON(e.data);
+        console.log(serverData);
+
+        if (serverData.content == "questions") {
+            //.totalRounds(serverData.rounds);
+            viewModel.questions.addQuestions(serverData.questions);
+        };
+    }
+
+    function onError() {
+        clearInterval(clearTimer);
+        socket.onclose = function () {
+            loadedFlag = false;
+        };
+        clearTimer = setInterval("connectWebSocket()", timeout);
+    }
+
+    function onClose() {
+        loadedFlag = false;
+        clearInterval(clearTimer);
+        clearTimer = setInterval("connectWebSocket()", timeout);
+    }
+
+    function onOpen() {
+        clearInterval(clearTimer);
+        console.log("open" + getSocketState());
+    }
+
+    function connectWebSocket() {
+
+        if ("WebSocket" in window) {
+            if (getSocketState() === 1) {
+                socket.onopen = onOpen;
+                clearInterval(clearTimer);
+                console.log(getSocketState());
+            }
+            else {
+                try {
+                    host = "ws://" + options.server + ":" + options.port;
+                    socket = new WebSocket(host);
+                    socket.onopen = onOpen;
+                    socket.onmessage = function (e) {
+                        onMessage(e);
+                    };
+                    socket.onerror = onError;
+                    socket.onclose = onClose;
+                }
+                catch (exeption) {
+                    console.log(exeption);
+                }
+            }
+        }
+    }
+
+    document.cookie = "username=John Doe; expires=Thu, 18 Dec 2013 12:00:00 UTC; path=/";
+</script>
+
+<script>
+    connectWebSocket();
+    //Show modal on startup
+    $(document).ready(function () {
+        $("#startupModal").modal('show');
+    });
+</script>
